@@ -1,3 +1,4 @@
+from logging import Logger
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -7,9 +8,9 @@ _engine = None
 _async_session = None
 
 
-def init_db():
+def init_db(logger: Logger):
     global _engine, _async_session
-    db_params = DatabaseParams.from_env()
+    db_params = DatabaseParams.from_env(logger)
     if _engine is None:
         _engine = create_async_engine(
             db_params.connection_string(), echo=True, future=True

@@ -1,0 +1,25 @@
+[project]
+name = "finances-shared"
+version = "0.1.0"
+description = ""
+authors = [{ name = "Mate Csornyei", email = "mate@csornyei.com" }]
+readme = "README.md"
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "python-json-logger (>=3.3.0,<4.0.0)",
+    "alembic (>=1.16.1,<2.0.0)",
+    "sqlalchemy (>=2.0.40,<3.0.0)",
+    "psycopg[binary,pool] (>=3.2.9,<4.0.0)",
+]
+
+[tool.poetry]
+name = "finances-shared"
+version = "0.1.0"
+description = "Shared code for the finances project"
+authors = ["Mate Csornyei (mate@csornyei.com)"]
+packages = [{ include = "finances_shared", from = "src" }]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

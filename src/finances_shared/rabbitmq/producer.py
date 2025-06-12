@@ -50,8 +50,7 @@ class RabbitMQProducer:
         self.channel = None
         self._lock = asyncio.Lock()
 
-    async def connect(self, logger: Logger):
-        params = RabbitMQParams.from_env(logger)
+    async def connect(self, params: RabbitMQParams, logger: Logger):
         self.connection = await aio_pika.connect_robust(
             params.connection_string(), heartbeat=30
         )

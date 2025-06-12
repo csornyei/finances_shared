@@ -11,8 +11,7 @@ class RabbitMQListener:
         self.connection = None
         self.channel = None
 
-    async def connect(self, logger: Logger):
-        params = RabbitMQParams.from_env()
+    async def connect(self, params: RabbitMQParams, logger: Logger):
         self.connection = await aio_pika.connect_robust(
             params.connection_string(), heartbeat=30
         )

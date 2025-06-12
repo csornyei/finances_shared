@@ -15,6 +15,35 @@ class DatetimeEncoder(JSONEncoder):
 
 
 class RabbitMQProducer:
+    """
+    RabbitMQ Producer for sending messages to a specified queue.
+    This class handles connection management, message serialization, and sending messages
+    to RabbitMQ using aio_pika for asynchronous operations.
+
+    Usage:
+    ```python
+    from contextlib import asynccontextmanager
+    from finances_shared.rabbitmq.producer import RabbitMQProducer
+
+    producer = RabbitMQProducer("your_queue_name")
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        try:
+            await producer.connect(logger)
+            yield
+        finally:
+            await producer.close()
+
+    app = FastAPI(lifespan=lifespan)
+
+    @app.post("/send_message")
+    async def send_message(message: dict):
+        await producer.send_message(message, logger)
+        return {"status": "Message sent"}
+    ```
+    """
+
     def __init__(self, queue_name: str):
         self.queue_name = queue_name
         self.connection = None
@@ -22,7 +51,7 @@ class RabbitMQProducer:
         self._lock = asyncio.Lock()
 
     async def connect(self, logger: Logger):
-        params = RabbitMQParams.from_env()
+        params = RabbitMQParams.from_env(logger)
         self.connection = await aio_pika.connect_robust(
             params.connection_string(), heartbeat=30
         )

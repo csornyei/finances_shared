@@ -20,6 +20,17 @@ description = "Shared code for the finances project"
 authors = ["Mate Csornyei (mate@csornyei.com)"]
 packages = [{ include = "finances_shared", from = "src" }]
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+pytest-asyncio = "^0.26.0"
+httpx = "^0.28.1"
+ruff = "^0.11.5"
+black = "^25.1.0"
+isort = "^6.0.1"
+
+[tool.ruff]
+target-version = "py313"
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

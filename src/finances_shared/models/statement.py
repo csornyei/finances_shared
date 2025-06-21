@@ -1,11 +1,12 @@
 import uuid
 from datetime import datetime
+
 from sqlalchemy import TIMESTAMP, ForeignKeyConstraint
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base
 from .account import Account
+from .base import Base
 
 
 class Statements(Base):

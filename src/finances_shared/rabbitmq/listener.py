@@ -1,8 +1,9 @@
 import asyncio
+from logging import Logger
+
 import aio_pika
 
 from finances_shared.params import RabbitMQParams
-from logging import Logger
 
 
 class RabbitMQListener:

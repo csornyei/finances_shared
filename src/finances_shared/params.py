@@ -1,6 +1,6 @@
 import os
-from logging import Logger
 from dataclasses import dataclass
+from logging import Logger
 
 
 @dataclass

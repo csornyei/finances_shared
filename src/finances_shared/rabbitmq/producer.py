@@ -1,9 +1,11 @@
 import asyncio
-import aio_pika
-import json
 import datetime
-from logging import Logger
+import json
 from json import JSONEncoder
+from logging import Logger
+
+import aio_pika
+
 from finances_shared.params import RabbitMQParams
 
 

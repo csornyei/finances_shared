@@ -1,4 +1,6 @@
+from contextlib import asynccontextmanager
 from logging import Logger
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -29,3 +31,21 @@ async def get_db():
         raise RuntimeError("Database session is not initialized. Call init_db() first.")
     async with _async_session() as session:
         yield session
+
+
+@asynccontextmanager
+async def get_db_session():
+    if _async_session is None:
+        raise RuntimeError("Database session is not initialized. Call init_db() first.")
+
+    db_generator = get_db()
+
+    try:
+        session = await anext(db_generator)
+        yield session
+    except Exception as e:
+        raise RuntimeError(f"Error getting database session: {e}")
+    finally:
+        await db_generator.aclose()
+        if session:
+            await session.close()

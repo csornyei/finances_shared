@@ -1,5 +1,3 @@
-from .account import Account
-from .base import Base
-from .statement import Statements
+from .models import Account, Statements, Tags, Base
 
-__all__ = ["Account", "Base", "Statements"]
+__all__ = ["Account", "Statements", "Tags", "Base"]

@@ -1,18 +1,18 @@
 import uuid
-from typing import List
 from datetime import datetime
+from typing import List
 
 from sqlalchemy import (
-    Table,
+    TIMESTAMP,
     Column,
     ForeignKey,
-    String,
-    UniqueConstraint,
-    TIMESTAMP,
     ForeignKeyConstraint,
+    String,
+    Table,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 
 Base = declarative_base()
 
@@ -38,12 +38,17 @@ class Account(Base):
         UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=True
     )
 
-    parent: Mapped["Account"] = relationship(
-        "Account", remote_side=[id], back_populates="aliases"
-    )
-    aliases: Mapped[list["Account"]] = relationship("Account", back_populates="parent")
-
     __table_args__ = (UniqueConstraint("name", "iban", name="uq_account_name_iban"),)
+
+
+class Tags(Base):
+    __tablename__ = "tags"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
+    color: Mapped[str] = mapped_column(nullable=True)
 
 
 class Statements(Base):
@@ -64,21 +69,21 @@ class Statements(Base):
     description: Mapped[str | None] = mapped_column(nullable=True)
 
     source_account: Mapped["Account"] = relationship(
-        "Account",
+        Account,
         primaryjoin="and_(Statements.account_iban == foreign(Account.iban), Statements.account_name == foreign(Account.name))",
         foreign_keys=[account_iban, account_name],
         viewonly=True,
     )
 
     destination_account: Mapped["Account"] = relationship(
-        "Account",
+        Account,
         primaryjoin="and_(Statements.counterparty_iban == Account.iban, Statements.counterparty_name == Account.name)",
         foreign_keys=[counterparty_iban, counterparty_name],
         viewonly=True,
     )
 
-    tags: Mapped[List["Tags"]] = relationship(
-        "Tag",
+    tags: Mapped[List[Tags]] = relationship(
+        Tags,
         secondary=tags_to_statement_table,
         back_populates="statements",
     )
@@ -97,17 +102,20 @@ class Statements(Base):
     )
 
 
-class Tags(Base):
-    __tablename__ = "tags"
+Account.parent = relationship(
+    "Account",
+    remote_side=[Account.id],
+    back_populates="aliases",
+)
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    name: Mapped[str] = mapped_column(nullable=False, unique=True)
-    color: Mapped[str] = mapped_column(nullable=True)
+Account.aliases = relationship(
+    "Account",
+    back_populates="parent",
+    foreign_keys=[Account.parent_id],
+)
 
-    statements: Mapped[List["Statements"]] = relationship(
-        "Statement",
-        secondary=tags_to_statement_table,
-        back_populates="tags",
-    )
+Tags.statements = relationship(
+    Statements,
+    secondary=tags_to_statement_table,
+    back_populates="tags",
+)

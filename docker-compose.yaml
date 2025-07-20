@@ -1,0 +1,140 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: finances_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: finances
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: finances_rabbitmq
+    restart: always
+    ports:
+      - "5672:5672" # AMQP protocol
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+
+  accounts:
+    build:
+      context: ../finances_accounts
+      dockerfile: Dockerfile
+    container_name: finances_accounts
+    restart: always
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "8081:8000"
+    environment:
+      - POSTGRES_HOST=finances_postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=finances
+      - RABBITMQ_HOST=finances_rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=rabbitmq
+      - RABBITMQ_PASSWORD=rabbitmq
+
+  files:
+    build:
+      context: ../finances-file-service
+      dockerfile: Dockerfile
+    container_name: finances_files_service
+    restart: always
+    depends_on:
+      - rabbitmq
+    ports:
+      - "8082:8000"
+    environment:
+      - RABBITMQ_HOST=finances_rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=rabbitmq
+      - RABBITMQ_PASSWORD=rabbitmq
+      - FILE_HANDLER_TYPE=local
+      - LOCAL_FILE_PATH=/app/files
+
+    volumes:
+      - files_data:/app/files
+      
+  statements:
+    build:
+      context: ../finances-statement-service
+      dockerfile: Dockerfile
+    container_name: finances_statements
+    restart: always
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "8083:8000"
+    environment:
+      - POSTGRES_HOST=finances_postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=finances
+      - RABBITMQ_HOST=finances_rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=rabbitmq
+      - RABBITMQ_PASSWORD=rabbitmq
+
+  tags:
+    build:
+      context: ../finances-tag-service
+      dockerfile: Dockerfile
+    container_name: finances_tags
+    restart: always
+    ports:
+      - "8084:8000"
+    environment:
+      - POSTGRES_HOST=finances_postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=finances
+      - RABBITMQ_HOST=finances_rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=rabbitmq
+      - RABBITMQ_PASSWORD=rabbitmq
+
+  bff:
+    build:
+      context: ../finances-bff
+      dockerfile: Dockerfile
+    container_name: finances_bff
+    restart: always
+    depends_on:
+      - accounts
+      - files
+      - statements
+      - tags
+    environment:
+      - ACCOUNT_SERVICE_URL=http://finances_accounts:8000
+      - FILE_SERVICE_URL=http://finances_files_service:8000
+      - STATEMENT_SERVICE_URL=http://finances_statements:8000
+      - TAG_SERVICE_URL=http://finances_tags:8000
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
+    driver: local
+  files_data:
+    driver: local
+
+secrets:
+  github_user:
+    file: ./secrets/github_user
+  github_token:
+    file: ./secrets/github_token
+  

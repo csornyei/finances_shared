@@ -1,6 +1,6 @@
 [project]
 name = "finances-shared"
-version = "0.3.0"
+version = "0.3.1"
 description = ""
 authors = [{ name = "Mate Csornyei", email = "mate@csornyei.com" }]
 readme = "README.md"

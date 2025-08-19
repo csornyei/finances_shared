@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: finances
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
@@ -23,15 +23,30 @@ services:
       RABBITMQ_DEFAULT_USER: rabbitmq
       RABBITMQ_DEFAULT_PASS: rabbitmq
 
-  accounts:
-    build:
-      context: ../finances_accounts
-      dockerfile: Dockerfile
-    container_name: finances_accounts
+  init:
+    image: ghcr.io/csornyei/finances_init:latest
+    container_name: finances_init
     restart: always
     depends_on:
       - postgres
       - rabbitmq
+    environment:
+      - POSTGRES_HOST=finances_postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - RABBITMQ_HOST=finances_rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=rabbitmq
+      - RABBITMQ_PASSWORD=rabbitmq
+
+  accounts:
+    image: ghcr.io/csornyei/finances_accounts:latest
+    container_name: finances_accounts
+    restart: always
+    depends_on:
+      - init
     ports:
       - "8081:8000"
     environment:
@@ -39,20 +54,18 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=finances
+      - POSTGRES_DB=postgres
       - RABBITMQ_HOST=finances_rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=rabbitmq
       - RABBITMQ_PASSWORD=rabbitmq
 
   files:
-    build:
-      context: ../finances-file-service
-      dockerfile: Dockerfile
+    image: ghcr.io/csornyei/finances-file-service:latest
     container_name: finances_files_service
     restart: always
     depends_on:
-      - rabbitmq
+      - init
     ports:
       - "8082:8000"
     environment:
@@ -65,16 +78,13 @@ services:
 
     volumes:
       - files_data:/app/files
-      
+
   statements:
-    build:
-      context: ../finances-statement-service
-      dockerfile: Dockerfile
+    image: ghcr.io/csornyei/finances-statement-service:latest
     container_name: finances_statements
     restart: always
     depends_on:
-      - postgres
-      - rabbitmq
+      - init
     ports:
       - "8083:8000"
     environment:
@@ -82,18 +92,18 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=finances
+      - POSTGRES_DB=postgres
       - RABBITMQ_HOST=finances_rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=rabbitmq
       - RABBITMQ_PASSWORD=rabbitmq
 
   tags:
-    build:
-      context: ../finances-tag-service
-      dockerfile: Dockerfile
+    image: ghcr.io/csornyei/finances-tag-service:latest
     container_name: finances_tags
     restart: always
+    depends_on:
+      - init
     ports:
       - "8084:8000"
     environment:
@@ -101,16 +111,14 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=finances
+      - POSTGRES_DB=postgres
       - RABBITMQ_HOST=finances_rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=rabbitmq
       - RABBITMQ_PASSWORD=rabbitmq
 
   bff:
-    build:
-      context: ../finances-bff
-      dockerfile: Dockerfile
+    image: ghcr.io/csornyei/finances-bff:latest
     container_name: finances_bff
     restart: always
     depends_on:
@@ -137,4 +145,3 @@ secrets:
     file: ./secrets/github_user
   github_token:
     file: ./secrets/github_token
-  

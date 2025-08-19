@@ -1,6 +1,6 @@
 [project]
 name = "finances-shared"
-version = "0.2.0"
+version = "0.3.0"
 description = ""
 authors = [{ name = "Mate Csornyei", email = "mate@csornyei.com" }]
 readme = "README.md"
@@ -13,25 +13,20 @@ dependencies = [
     "aio-pika (>=9.5.5,<10.0.0)",
 ]
 
-[tool.poetry]
-name = "finances-shared"
-version = "0.1.0"
-description = "Shared code for the finances project"
-authors = ["Mate Csornyei (mate@csornyei.com)"]
-packages = [{ include = "finances_shared", from = "src" }]
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.5"
-pytest-asyncio = "^0.26.0"
-httpx = "^0.28.1"
-ruff = "^0.11.5"
-black = "^25.1.0"
-isort = "^6.0.1"
+[project.optional-dependencies]
+dev = [
+    "pytest (>=8.3.5,<9.0.0)",
+    "pytest-asyncio (>=0.26.0,<0.27.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "ruff (>=0.11.5,<0.12.0)",
+    "black (>=25.1.0,<25.2.0)",
+    "isort (>=6.0.1,<6.1.0)",
+]
 
 [tool.ruff]
 target-version = "py313"
 
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.8.12,<0.9.0"]
+build-backend = "uv_build"
